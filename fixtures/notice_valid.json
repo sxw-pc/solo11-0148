@@ -1,0 +1,1 @@
+{"notices":[{"event_id":"notice-N1","id":"N1","case_id":"E1","incident_version":1,"level":"warning","recipients":["X","Y"]}],"receipts":[{"event_id":"receipt-X","notice_id":"N1","intake_id":"X","kind":"deliver","at":"2026-11-17T11:00:00"},{"event_id":"receipt-Y","notice_id":"N1","intake_id":"Y","kind":"deliver","at":"2026-11-17T11:01:00"}]}
