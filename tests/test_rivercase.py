@@ -90,6 +90,13 @@ class RiverCaseTest(unittest.TestCase):
         result=incident.import_data(self.db,{'cases':[c]})[1]
         self.assertEqual(result['level'],'clear')
         self.assertEqual(json.loads(result['affected_json']),[])
+    def test_distant_intake_outside_propagation_window(self):
+        self.prepared()
+        added={'edges':[{'event_id':'edge-CD','upstream':'C','downstream':'D','travel_minutes':90}],
+               'intakes':[{'event_id':'intake-W','id':'W','station':'D'}]}
+        result=incident.import_data(self.db,added)[0]
+        self.assertEqual(result['level'],'warning')
+        self.assertEqual(json.loads(result['affected_json']),['X','Y'])
     def test_missing_recipient_blocks_notice(self):
         self.prepared()
         self.assertEqual(notice.import_data(self.db,fixture('notice_missing.json'))[0]['status'],'blocked')

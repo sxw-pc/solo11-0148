@@ -43,7 +43,10 @@ def evaluate(db,case):
     state='confirmed' if level=='warning' else ('pending' if level=='candidate' else 'closed')
     affected=[]
     if level=='warning':
-        affected=[i['id'] for i in db.execute('SELECT * FROM intake ORDER BY id') if i['station'] in distance]
+        origin_times=[datetime.fromisoformat(o['at']) for o in high if o['station']==case['origin']]
+        plume_start=min(origin_times) if origin_times else start
+        affected=[i['id'] for i in db.execute('SELECT * FROM intake ORDER BY id')
+                  if i['station'] in distance and plume_start+timedelta(minutes=distance[i['station']])<=end]
     inputs=sorted(o['event_id'] for o in valid)
     reason=f'{len(high)} independent high observations; directed reachability from {case["origin"]}'
     old=current(db,case['id'])
