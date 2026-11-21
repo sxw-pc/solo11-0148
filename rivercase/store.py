@@ -13,14 +13,19 @@ CREATE TABLE IF NOT EXISTS sample_conflict(event_id TEXT PRIMARY KEY,bottle_id T
 CREATE TABLE IF NOT EXISTS custody_handoff(event_id TEXT PRIMARY KEY,bottle_id TEXT NOT NULL,sender TEXT NOT NULL,recipient TEXT NOT NULL,at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS lab_result(event_id TEXT PRIMARY KEY,bottle_id TEXT NOT NULL,value REAL NOT NULL,method TEXT NOT NULL,method_valid_to TEXT NOT NULL,detection_limit REAL NOT NULL,threshold REAL NOT NULL,retest_of TEXT);
 CREATE TABLE IF NOT EXISTS sample_decision(bottle_id TEXT PRIMARY KEY,status TEXT NOT NULL,reason TEXT NOT NULL,result_event TEXT,version INTEGER NOT NULL);
-CREATE TABLE IF NOT EXISTS river_edge(upstream TEXT NOT NULL,downstream TEXT NOT NULL,travel_minutes INTEGER NOT NULL,PRIMARY KEY(upstream,downstream));
-CREATE TABLE IF NOT EXISTS intake(id TEXT PRIMARY KEY,station TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS river_edge(upstream TEXT NOT NULL,downstream TEXT NOT NULL,travel_minutes INTEGER NOT NULL,travel_minutes_max INTEGER,PRIMARY KEY(upstream,downstream));
+CREATE TABLE IF NOT EXISTS river_gate(event_id TEXT PRIMARY KEY,gate_id TEXT NOT NULL,edge_upstream TEXT NOT NULL,edge_downstream TEXT NOT NULL,gate_state TEXT NOT NULL,UNIQUE(edge_upstream,edge_downstream));
+CREATE TABLE IF NOT EXISTS gate_log(event_id TEXT PRIMARY KEY,gate_id TEXT NOT NULL,state TEXT NOT NULL,at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS intake(id TEXT PRIMARY KEY,station TEXT NOT NULL,shutdown_at TEXT);
 CREATE TABLE IF NOT EXISTS incident_case(id TEXT PRIMARY KEY,origin TEXT NOT NULL,threshold REAL NOT NULL,window_start TEXT NOT NULL,window_end TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS incident_version(case_id TEXT NOT NULL,version INTEGER NOT NULL,level TEXT NOT NULL,status TEXT NOT NULL,affected_json TEXT NOT NULL,inputs_json TEXT NOT NULL,reason TEXT NOT NULL,PRIMARY KEY(case_id,version));
+CREATE TABLE IF NOT EXISTS incident_version(case_id TEXT NOT NULL,version INTEGER NOT NULL,level TEXT NOT NULL,status TEXT NOT NULL,affected_json TEXT NOT NULL,inputs_json TEXT NOT NULL,reason TEXT NOT NULL,possible_json TEXT NOT NULL DEFAULT '[]',unreachable_json TEXT NOT NULL DEFAULT '[]',windows_json TEXT NOT NULL DEFAULT '{}',gates_json TEXT NOT NULL DEFAULT '[]',conflicts_json TEXT NOT NULL DEFAULT '[]',PRIMARY KEY(case_id,version));
 CREATE TABLE IF NOT EXISTS affected_intake(case_id TEXT NOT NULL,version INTEGER NOT NULL,intake_id TEXT NOT NULL,PRIMARY KEY(case_id,version,intake_id));
 CREATE TABLE IF NOT EXISTS notice_revision(id TEXT PRIMARY KEY,case_id TEXT NOT NULL,incident_version INTEGER NOT NULL,level TEXT NOT NULL,recipients_json TEXT NOT NULL,status TEXT NOT NULL,reason TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS recipient_receipt(event_id TEXT PRIMARY KEY,notice_id TEXT NOT NULL,intake_id TEXT NOT NULL,kind TEXT NOT NULL,at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS notice_obligation(notice_id TEXT NOT NULL,intake_id TEXT NOT NULL,kind TEXT NOT NULL,status TEXT NOT NULL,PRIMARY KEY(notice_id,intake_id,kind));
+CREATE TABLE IF NOT EXISTS duty_task(id TEXT PRIMARY KEY,case_id TEXT NOT NULL,incident_version INTEGER NOT NULL,intake_id TEXT NOT NULL,window_start TEXT NOT NULL,window_end TEXT NOT NULL,unverified_gates_json TEXT NOT NULL,status TEXT NOT NULL,reason TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS duty_obligation(task_id TEXT NOT NULL,intake_id TEXT NOT NULL,kind TEXT NOT NULL,status TEXT NOT NULL,PRIMARY KEY(task_id,intake_id,kind));
+CREATE TABLE IF NOT EXISTS duty_receipt(event_id TEXT PRIMARY KEY,task_id TEXT NOT NULL,intake_id TEXT NOT NULL,kind TEXT NOT NULL,at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS decision_log(id INTEGER PRIMARY KEY,subsystem TEXT NOT NULL,object_id TEXT NOT NULL,state TEXT NOT NULL,reason TEXT NOT NULL,evidence_id TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 """
 def connect(path):
